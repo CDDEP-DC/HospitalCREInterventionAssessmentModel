@@ -45,17 +45,21 @@ CREmodel <- function(Time, State, Pars,DTVals) {
         
         # Calculate the transmission parameters
         # First the transmission of the nurses and doctors
+        # Equations 5 & 6 from the report with eq. 16 incorporated
         bn <- (Cnp^2*Qnp*Qpn)/((zeta + sigmaN * sigN1) + Qpn*Cnp)
         bd <- (Cdp^2*Qdp*Qpd)/((zeta + sigmaD * sigD1) + Qpd*Cdp)
         
+        # Equations 5 & 6 from the report with eq. 12 & 13 incorporated
         Krn <- bn*rn*(X$Cu + sigCP*sigD*X$Cd + xi*sigCP*sigD*X$I)
         Krd <- bd*rd*(X$Cu + sigCP*sigD*X$Cd + xi*sigCP*sigD*X$I)
         
         # Now the transmission from the environment
+        # These equations combine all healthcare workers
         rh  <- rd + rn
         Chp <- Cdp + Cnp
         Qhp <- (Qnp*(Cnp/rn) + Qdp*(Cdp/rd))/((Cnp/rn) + (Cdp/rd))
         
+        # Equation 8 from the report
         by  <- ((X$Y/patients) / (IC + (X$Y/patients))) * Chp*rh*betaY*Qhp
         bt  <- ((X$Tx/patients)/ (IC + (X$Tx/patients)))* Chp*rh*betaT*Qhp
         bm  <- ((X$M/patients) / (IC + (X$M/patients))) * Chp*rh*betaM*Qhp
@@ -78,7 +82,7 @@ CREmodel <- function(Time, State, Pars,DTVals) {
         # We assume a constant population, this ensures that the total population and the wards stay the same size
         intake = rowSums(X[,1:5])*gamma + X$I*delta - rowSums(Tig[,1:5]) + rowSums(Tgi[,1:5])
         
-        # These are the primary ODE equations for the population states
+        # These are the primary ODE equations (equations in 1 from the report) for the population states
         dS  <- aS*intake  + Tig$S + omega*X$XR + rhoO*(X$Cu + X$Cd) - Tgi$S - X$S*(K + sigAe*pi + gamma)
         
         dXR <- aXR*intake + Tig$XR + sigAe*pi*(X$S + phi*(X$Cu + sigAm*X$Cd)) + X$I*sigAp*rhoR*(1 - epsilon) - Tgi$XR - X$XR*(psi*K + omega + gamma)
@@ -88,16 +92,17 @@ CREmodel <- function(Time, State, Pars,DTVals) {
         
         dI  <- aI*intake  + Tig$I + tau*(X$Cu+X$Cd) + K*theta*(X$S + psi*X$XR) - Tgi$I - X$I*(sigAp*rhoR + gamma + delta)
         
-        # These are the primary ODE equations for the environmental states
+        # These are the primary ODE equations for the environmental states (equations in 9 from the report)
         dY  <- (X$Cu + sigD*X$Cd + sigD*xi*X$I)*eta*patients*Chp*(1/rh) - X$Y*(mu + sigY + sigY1)
         dTx <- (X$Cu + sigD*X$Cd + sigD*xi*X$I)*eta*patients*Chp*(1/rh) - X$Tx*(mu + sigT + sigT1)
         dM  <- (X$Cu + sigD*X$Cd + sigD*xi*X$I)*eta*patients*Chp*(1/rh)*betaM - X$M*(mu + Pc*(sigMc + sigMc1) + Psc*(sigMsc + sigMsc1) + Pnc*(sigMnc + sigMnc1))
         dL  <- (X$Cu + sigD*X$Cd + sigD*xi*X$I)*eta*patients*Chp*(1/rh)*betaL - X$L*(mu + sigL + sigL1)
         dW  <- (X$Cu + sigD*X$Cd + sigD*xi*X$I)*eta*patients*Chp*(1/rh) - X$W*(mu/450 + sigW + sigW1)
-        dCH <- (1 - theta)*K*(X$S + psi*X$XR) + X$I*sigAp*rhoR*epsilon
-        dCI <- aC*intake
 
         # These maintain additional states for computing important outcome variables including deaths and infections
+        dCH <- (1 - theta)*K*(X$S + psi*X$XR) + X$I*sigAp*rhoR*epsilon
+        dCI <- aC*intake
+        
         dIH <- tau*(X$Cu+X$Cd) + K*theta*(X$S + psi*X$XR)
         dII <- aI*intake
         
@@ -122,7 +127,7 @@ CREmodel <- function(Time, State, Pars,DTVals) {
     })
 }
 
-# The following model is nearly the same as above, but implements patient cohorting
+# The following model is nearly the same as above, but implements patient cohorting (section 2.2.5 of the report)
 # Inputs are the same
 CREmodel_Cohorting <- function(Time, State, Pars,DTVals) {
   
@@ -200,11 +205,14 @@ CREmodel_Cohorting <- function(Time, State, Pars,DTVals) {
     dIH <- tau*(X$Cu+(X$Cd1 + X$Cd2)) + K*theta*(X$S + psi*X$XR)
     dII <- aI*intake
     
+    dIe <- Kre*theta*(X$S + psi*X$XR)
+    dIc <- (Krn + Krd)*theta*(X$S + psi*X$XR) 
+    
     dDeaths <- (X$I1 + X$I2)*delta
     
     # Now return the population structure to a single vector
     for(i in 1:numrows) {
-      w = c(dS[i], dXR[i], dCu[i], dCd1[i], dCd2[i], dI1[i], dI2[i], dY[i], dTx[i], dM[i], dL[i], dW[i], dCH[i], dCI[i], dIH[i], dII[i], dDeaths[i])
+      w = c(dS[i], dXR[i], dCu[i], dCd1[i], dCd2[i], dI1[i], dI2[i], dY[i], dTx[i], dM[i], dL[i], dW[i], dCH[i], dCI[i], dIH[i], dII[i], dIe[i], dIc[i], dDeaths[i])
       if(i==1){
         y = w
       } else {

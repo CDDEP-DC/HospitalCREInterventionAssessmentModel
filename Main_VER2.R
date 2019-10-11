@@ -356,11 +356,10 @@ for(envnum in 7:10) {
   
   # Create a folders to output all model and plot files for a specific environment
   
-  dir.create(paste(trimws(paste("hCREiAM Data",runstartday,"")),colnames(hpv[envnum]),sep="/"))
-  dir.create(paste(trimws(paste("hCREiAM Data",runstartday,"")),colnames(hpv[envnum]),"PRCCValues",sep="/"))
-  dir.create(paste(trimws(paste("hCREiAM Data",runstartday,"")),colnames(hpv[envnum]),"Plots",sep="/"))
-  dir.create(paste(trimws(paste("hCREiAM Data",runstartday,"")),colnames(hpv[envnum]),"CostTables",sep="/"))
-  
+  dir.create(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),sep="/"))
+  dir.create(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"PRCCValues",sep="/"))
+  dir.create(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots",sep="/"))
+  dir.create(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"CostTables",sep="/"))
   
   ## This is where the Latin Hypercube Sample Begins
   
@@ -786,7 +785,7 @@ for(envnum in 7:10) {
     geom_errorbar(aes(ymin = Infections.Averted - Infections.Averted.SE,
                       ymax = Infections.Averted + Infections.Averted.SE), width = 0.5)
   
-  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Bundeled IPCs Infection Averted.eps",sep="/"), width = 11, height = 8.5, units = "in")
+  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Bundeled IPCs Infection Averted.eps",sep="/"), width = 9, height = 9, units = "in")
   
   BNDLPlot$BNDLnames <- factor(BNDLPlot$BNDLnames, levels = BNDLPlot$BNDLnames[order(BNDLPlot$Deaths.Averted)])
   
@@ -799,7 +798,7 @@ for(envnum in 7:10) {
     geom_errorbar(aes(ymin = Deaths.Averted - Deaths.Averted.SE,
                       ymax = Deaths.Averted + Deaths.Averted.SE), width = 0.5)
   
-  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Bundeled IPCs Deaths Averted.eps",sep="/"), width = 14, height = 8.5, units = "in")
+  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Bundeled IPCs Deaths Averted.eps",sep="/"), width = 8, height = 9, units = "in")
   
   
   ## Incoporating costing into the simulated data
@@ -863,13 +862,14 @@ for(envnum in 7:10) {
     theme_classic() +
     labs(y = paste("Net", "Cost", "in", currency[which(currency[,1] == paste0(hpv[1,envnum])),2], sep = " ")) +
     theme(axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 0, vjust = 1, size = 8.5)) +
+          axis.text.x = element_text(angle = 0, vjust = 1, size = 8.5),
+          axis.text.y = element_text(size = 9)) +
     geom_errorbar(aes(ymin = Net.Cost - Net.Cost.SE,
                       ymax = Net.Cost + Net.Cost.SE), width = 0.5) +
-    scale_y_continuous(trans = "pseudo_log", breaks = c(-10^6, -10^4, -10^2, 0, 10^2, 10^4, 10^6, 10^8),
-                       labels = c(expression(-10^6), expression(-10^4), expression(-10^2), "0", expression(10^2), expression(10^4), expression(10^6), expression(10^8)))
+    scale_y_continuous(trans = "pseudo_log", breaks = c(-10^6, -10^5, -10^4, -10^3, -10^2, -10, 0, 10, 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8),
+                       labels = c(expression(-10^6), expression(-10^5), expression(-10^4), expression(-10^3), expression(-10^2), "-10", "0", "10", expression(10^2), expression(10^3), expression(10^4), expression(10^5), expression(10^6), expression(10^7), expression(10^8)))
   
-  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Net Cost.eps",sep="/"), width = 14, height = 8.5, units = "in")
+  ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","Net Cost.eps",sep="/"), width = 14, height = 9, units = "in")
   
   ICERTable <- data.frame(
     "ASCPCHGtCHG"    = as.numeric(unlist(((costtable["ASCPCHG.cost"] - ((costtable["ASCPCHG.1"]*percost.gw) + (costtable["ASCPCHG.2"]*percost.icu)))          - (costtable["CHG.cost"] - ((costtable["CHG.1"]*percost.gw) + (costtable["CHG.2"]*percost.icu))))             / (costtable["ASCPCHG.Deaths"] - costtable["CHG.Deaths"]))),
@@ -880,11 +880,8 @@ for(envnum in 7:10) {
     "ALLtASCPCHG"    = as.numeric(unlist(((costtable["ALL.cost"] - ((costtable["ALL.1"]*percost.gw) + (costtable["ALL.2"]*percost.icu)))                      - (costtable["ASCPCHG.cost"] - ((costtable["ASCPCHG.1"]*percost.gw) + (costtable["ASCPCHG.2"]*percost.icu)))) / (costtable["ALL.Deaths"] - costtable["ASCPCHG.Deaths"])))
   )
   
-  ICERTableNames <- c("Active Surveillance,\nContact Precautions\n& CHG Bathing*", "ICU Only Active\nSurveillance,\nContact Precautions\n& CHG Bathing*", 
-                      "Active Surveillance\n& Judicious Use\u2020", "ICU Only Active\nSurveillance\n& Judicious Use\u2020", "Cohorting &\nActive Surveillance\u2021", "All IPCs\u00A7")
-  
-  # ICERTableNames <- c(expression("Active Surveillance,\nContact Precautions\n& CHG Bathing"^"*"), expression("ICU Only Active\nSurveillance,\nContact Precautions\n& CHG Bathing"^"*"), 
-  #                     expression("Active Surveillance\n& Judicious Use"^"\u2020"), expression("ICU Only Active\nSurveillance\n& Judicious Use"^"\u2020"), expression("Cohorting &\nActive Surveillance"^"\u2021"), expression("All IPCs"^"\u00A7"))
+  ICERTableNames <- c("Active Surveillance,\nContact Precautions\n& CHG Bathing\u2020", "ICU Only Active\nSurveillance,\nContact Precautions\n& CHG Bathing\u2020", 
+                      "Active Surveillance\n& Judicious Use\u2021", "ICU Only Active\nSurveillance\n& Judicious Use\u2021", "Cohorting &\nActive Surveillance\u00A7", "All IPCs\u2016")
   
   ICERTablePlot <- data.frame(ICERTableNames, "Incremental Cost-Effectiveness Ratio" = unlist(colMeans(ICERTable)), 
                               "Incremental Cost-Effectiveness Ratio SE" = unlist(apply(ICERTable, 2, sd))/sqrt(n))
@@ -892,16 +889,18 @@ for(envnum in 7:10) {
   ICERTablePlot$ICERTableNames <- factor(ICERTablePlot$ICERTableNames, levels = ICERTablePlot$ICERTableNames[order(1:6)])
   
   
-  ggplot(ICERTablePlot, aes(x = ICERTableNames, y = Incremental.Cost.Effectiveness.Ratio)) +
+  ggplot(ICERTablePlot, aes(x = ICERTablePlot$ICERTableNames, y = Incremental.Cost.Effectiveness.Ratio)) +
     geom_bar(stat = "identity", color="black", position=position_dodge(), fill = colors[7]) +
     theme_classic() +
     labs(y = paste("ICER", "Cost", "in", currency[which(currency[,1] == paste0(hpv[1,envnum])),2], sep = " ")) +
-    theme(axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 0, vjust = 1, size = 8.5)) +
     geom_errorbar(aes(ymin = Incremental.Cost.Effectiveness.Ratio - Incremental.Cost.Effectiveness.Ratio.SE,
                       ymax = Incremental.Cost.Effectiveness.Ratio + Incremental.Cost.Effectiveness.Ratio.SE), width = 0.5) +
-    scale_y_continuous(trans = "log10", breaks = c(100, 10^4, 10^6, 10^8, 10^10),
-                       labels = c(as.expression(10^2), expression(10^4), expression(10^6), expression(10^8), expression(10^10)))
+    scale_y_continuous(trans = "log10", breaks = c(10, 100, 1000, 10^4, 10^5, 10^6, 10^7, 10^8, 10^9, 10^10),
+                       labels = c(expression(10), expression(10^2), expression(10^3), expression(10^4), expression(10^5), 
+                                  expression(10^6), expression(10^7), expression(10^8), expression(10^9), expression(10^10))) +
+    theme(axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 0, hjust = 0.5, size = 8.5),
+          axis.text.y = element_text(size = 9))
   
   ggsave(paste(paste("hCREiAM Data",runstartday,""),colnames(hpv[envnum]),"Plots","ICER.eps",sep="/"), width = 8, height = 9, units = "in")
   
